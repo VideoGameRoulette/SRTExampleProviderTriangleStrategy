@@ -80,10 +80,25 @@ namespace SRTExampleProvider64
         /// <summary>
         /// UPDATES GAME MEMORY VALUES FROM POINTERS
         /// </summary>
-        internal IGameMemoryExample Refresh()
+        internal unsafe IGameMemoryExample Refresh()
         {
+            bool success;
             // Example With MultiLevelPointer
-            gameMemoryValues._money = PointerExample.DerefInt(0x20);
+            // gameMemoryValues._money = PointerExample.DerefInt(0x20);
+            fixed (int* p = &gameMemoryValues._money)
+                success = PointerExample.TryDerefInt(0x20, p);
+
+            fixed (int* p = &gameMemoryValues._kudos)
+                success = PointerExample.TryDerefInt(0x4C0, p);
+
+            fixed (int* p = &gameMemoryValues._liberty)
+                success = PointerExample.TryDerefInt(0x36C, p);
+
+            fixed (int* p = &gameMemoryValues._utility)
+                success = PointerExample.TryDerefInt(0x370, p);
+
+            fixed (int* p = &gameMemoryValues._morality)
+                success = PointerExample.TryDerefInt(0x374, p);
 
             HasScanned = true;
             return gameMemoryValues;
