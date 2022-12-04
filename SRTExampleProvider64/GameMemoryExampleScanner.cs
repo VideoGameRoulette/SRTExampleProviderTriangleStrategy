@@ -20,13 +20,17 @@ namespace SRTExampleProvider64
         /// <summary>
         /// POINTER ADDRESS VARIABLES
         /// </summary>
-        private long pointerAddressExample;
+        private long pointerAddressPropsManager;
+        private long pointerAddressGameManager;
+        private long pointerAddressPauseManager;
 
         /// <summary>
         /// POINTER VARIABLES
         /// </summary>
         private long BaseAddress { get; set; }
-        private MultilevelPointer PointerExample { get; set; }
+        private MultilevelPointer PointerPropsManager { get; set; }
+        private MultilevelPointer PointerGameManager { get; set; }
+        private MultilevelPointer PointerPauseManager { get; set; }
 
         /// <summary>
         /// CLASS CONTRUCTOR
@@ -51,7 +55,9 @@ namespace SRTExampleProvider64
             if (ProcessRunning)
             {
                 BaseAddress = NativeWrappers.GetProcessBaseAddress(pid, PInvoke.ListModules.LIST_MODULES_64BIT).ToInt64(); // Bypass .NET's managed solution for getting this and attempt to get this info ourselves via PInvoke since some users are getting 299 PARTIAL COPY when they seemingly shouldn't.
-                PointerExample = new MultilevelPointer(memoryAccess, (IntPtr)(BaseAddress + pointerAddressExample), 0x428L, 0x18L);
+                PointerGameManager = new MultilevelPointer(memoryAccess, (IntPtr)(BaseAddress + pointerAddressGameManager));
+                PointerPropsManager = new MultilevelPointer(memoryAccess, (IntPtr)(BaseAddress + pointerAddressPropsManager), 0x428L, 0x18L);
+                PointerPauseManager = new MultilevelPointer(memoryAccess, (IntPtr)(BaseAddress + pointerAddressPauseManager), 0x198L, 0x10L);
             }
         }
 
@@ -60,13 +66,12 @@ namespace SRTExampleProvider64
         /// </summary>
         private void SelectPointerAddresses(GameVersion version)
         {
-            if (version == GameVersion.GameName_Region_ReleaseData_Patch)
+            if (version == GameVersion.GameName_Region_ReleaseData_Patch || version == GameVersion.UNKNOWN)
             {
-                pointerAddressExample = 0x04D020D0;
+                pointerAddressGameManager = 0x04A4AD58;
+                pointerAddressPropsManager = 0x04D020D0;
+                pointerAddressPauseManager = 0x04D05910;
             }
-            else if (version == GameVersion.UNKNOWN){
-                pointerAddressExample = 0x04D020D0;
-            } 
         }
 
         /// <summary>
@@ -74,7 +79,9 @@ namespace SRTExampleProvider64
         /// </summary>
         internal void UpdatePointers()
         {
-            PointerExample.UpdatePointers();
+            PointerPropsManager.UpdatePointers();
+            PointerGameManager.UpdatePointers();
+            PointerPauseManager.UpdatePointers();
         }
 
         /// <summary>
@@ -83,22 +90,26 @@ namespace SRTExampleProvider64
         internal unsafe IGameMemoryExample Refresh()
         {
             bool success;
-            // Example With MultiLevelPointer
-            // gameMemoryValues._money = PointerExample.DerefInt(0x20);
+            
+            gameMemoryValues._isGameplay = PointerGameManager.DerefByte(0x0);
+
+            fixed (byte* p = &gameMemoryValues._isPaused)
+                success = PointerPauseManager.TryDerefByte(0x0A, p);
+
             fixed (int* p = &gameMemoryValues._money)
-                success = PointerExample.TryDerefInt(0x20, p);
+                success = PointerPropsManager.TryDerefInt(0x20, p);
 
             fixed (int* p = &gameMemoryValues._kudos)
-                success = PointerExample.TryDerefInt(0x4C0, p);
+                success = PointerPropsManager.TryDerefInt(0x4C0, p);
 
             fixed (int* p = &gameMemoryValues._liberty)
-                success = PointerExample.TryDerefInt(0x36C, p);
+                success = PointerPropsManager.TryDerefInt(0x36C, p);
 
             fixed (int* p = &gameMemoryValues._utility)
-                success = PointerExample.TryDerefInt(0x370, p);
+                success = PointerPropsManager.TryDerefInt(0x370, p);
 
             fixed (int* p = &gameMemoryValues._morality)
-                success = PointerExample.TryDerefInt(0x374, p);
+                success = PointerPropsManager.TryDerefInt(0x374, p);
 
             HasScanned = true;
             return gameMemoryValues;

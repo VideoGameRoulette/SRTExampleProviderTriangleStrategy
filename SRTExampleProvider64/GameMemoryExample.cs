@@ -12,6 +12,10 @@ namespace SRTExampleProvider64
     {
         public string GameName => "Triangle Strategy";
         public string VersionInfo => FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
+        public bool IsGameplay { get => _isGameplay == 0x01; }
+        internal byte _isGameplay;
+        public bool IsPaused { get => _isPaused == 0x01; }
+        internal byte _isPaused;
         public int Money { get => _money; set => _money = value; }
         internal int _money;
         public int Kudos { get => _kudos; set => _kudos = value; }
