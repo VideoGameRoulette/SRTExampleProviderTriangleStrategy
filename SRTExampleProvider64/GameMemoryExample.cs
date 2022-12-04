@@ -1,10 +1,5 @@
-﻿using System;
-using System.Globalization;
-using System.Collections.Generic;
-using SRTExampleProvider64.Structs;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
-using SRTExampleProvider64.Structs.GameStructs;
 
 namespace SRTExampleProvider64
 {

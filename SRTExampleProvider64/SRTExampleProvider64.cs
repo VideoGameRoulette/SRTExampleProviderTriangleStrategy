@@ -9,6 +9,7 @@ namespace SRTExampleProvider64
     {
         private Process process;
         private GameMemoryExampleScanner gameMemoryScanner;
+        private Stopwatch stopwatch;
         private IPluginHostDelegates hostDelegates;
         public IPluginInfo Info => new PluginInfo();
         public bool GameRunning
@@ -31,6 +32,8 @@ namespace SRTExampleProvider64
             this.hostDelegates = hostDelegates;
             process = GetProcess();
             gameMemoryScanner = new GameMemoryExampleScanner(process);
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
             return 0;
         }
 
@@ -38,6 +41,8 @@ namespace SRTExampleProvider64
         {
             gameMemoryScanner?.Dispose();
             gameMemoryScanner = null;
+            stopwatch?.Stop();
+            stopwatch = null;
             return 0;
         }
 
@@ -48,6 +53,11 @@ namespace SRTExampleProvider64
                 if (!GameRunning) // Not running? Bail out!
                     return null;
 
+                if (stopwatch.ElapsedMilliseconds >= 2000L)
+                {
+                    gameMemoryScanner.UpdatePointers();
+                    stopwatch.Restart();
+                }
                 return gameMemoryScanner.Refresh();
             }
             catch (Exception ex)

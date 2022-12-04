@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using SRTExampleProvider64.Structs;
-using SRTExampleProvider64.Structs.GameStructs;
-
-namespace SRTExampleProvider64
+﻿namespace SRTExampleProvider64
 {
     public interface IGameMemoryExample
     {

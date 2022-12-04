@@ -1,8 +1,6 @@
 ﻿using ProcessMemory;
 using System;
 using System.Diagnostics;
-using SRTExampleProvider64.Structs.GameStructs;
-using System.Linq;
 
 namespace SRTExampleProvider64
 {
@@ -29,7 +27,6 @@ namespace SRTExampleProvider64
         /// </summary>
         private long BaseAddress { get; set; }
         private MultilevelPointer PointerPropsManager { get; set; }
-        private MultilevelPointer PointerGameManager { get; set; }
         private MultilevelPointer PointerPauseManager { get; set; }
 
         /// <summary>
@@ -55,7 +52,6 @@ namespace SRTExampleProvider64
             if (ProcessRunning)
             {
                 BaseAddress = NativeWrappers.GetProcessBaseAddress(pid, PInvoke.ListModules.LIST_MODULES_64BIT).ToInt64(); // Bypass .NET's managed solution for getting this and attempt to get this info ourselves via PInvoke since some users are getting 299 PARTIAL COPY when they seemingly shouldn't.
-                PointerGameManager = new MultilevelPointer(memoryAccess, (IntPtr)(BaseAddress + pointerAddressGameManager));
                 PointerPropsManager = new MultilevelPointer(memoryAccess, (IntPtr)(BaseAddress + pointerAddressPropsManager), 0x428L, 0x18L);
                 PointerPauseManager = new MultilevelPointer(memoryAccess, (IntPtr)(BaseAddress + pointerAddressPauseManager), 0x198L, 0x10L);
             }
@@ -66,7 +62,7 @@ namespace SRTExampleProvider64
         /// </summary>
         private void SelectPointerAddresses(GameVersion version)
         {
-            if (version == GameVersion.GameName_Region_ReleaseData_Patch || version == GameVersion.UNKNOWN)
+            if (version == GameVersion.RELEASE_16901882 || version == GameVersion.UNKNOWN)
             {
                 pointerAddressGameManager = 0x04A4AD58;
                 pointerAddressPropsManager = 0x04D020D0;
@@ -80,7 +76,6 @@ namespace SRTExampleProvider64
         internal void UpdatePointers()
         {
             PointerPropsManager.UpdatePointers();
-            PointerGameManager.UpdatePointers();
             PointerPauseManager.UpdatePointers();
         }
 
@@ -90,8 +85,8 @@ namespace SRTExampleProvider64
         internal unsafe IGameMemoryExample Refresh()
         {
             bool success;
-            
-            gameMemoryValues._isGameplay = PointerGameManager.DerefByte(0x0);
+
+            gameMemoryValues._isGameplay = memoryAccess.GetByteAt((IntPtr)(BaseAddress + pointerAddressGameManager));
 
             fixed (byte* p = &gameMemoryValues._isPaused)
                 success = PointerPauseManager.TryDerefByte(0x0A, p);
